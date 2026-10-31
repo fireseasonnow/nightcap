@@ -1,0 +1,38 @@
+#!/bin/bash
+# Daily Homebrew update + upgrade + cleanup.
+# Run by the launchd agent that install.sh sets up; skips on battery,
+# notifies only on failure. Log: ~/Library/Logs/nightcap.log
+
+# Apple Silicon installs live in /opt/homebrew, Intel ones in /usr/local
+if [ -x /opt/homebrew/bin/brew ]; then
+  brew_bin=/opt/homebrew/bin
+else
+  brew_bin=/usr/local/bin
+fi
+export PATH="$brew_bin:/usr/bin:/bin:/usr/sbin:/sbin"
+export HOMEBREW_NO_ENV_HINTS=1
+# brew update runs explicitly below; don't let other commands re-run it
+export HOMEBREW_NO_AUTO_UPDATE=1
+
+log=~/Library/Logs/nightcap.log
+# keep the log from growing forever
+[ -f "$log" ] && tail -n 2000 "$log" > "$log.tmp" && mv "$log.tmp" "$log"
+exec >>"$log" 2>&1
+
+echo "=== $(date)"
+
+if ! pmset -g batt | grep -q "'AC Power'"; then
+  echo "on battery, skipping"
+  exit 0
+fi
+
+if brew update && before=$(brew outdated --quiet) && brew upgrade && brew cleanup; then
+  # whatever was outdated before and isn't now got upgraded (pinned ones stay outdated)
+  upgraded=$(comm -23 <(sort <<<"$before") <(brew outdated --quiet | sort) | xargs)
+  echo "ok, upgraded: ${upgraded:-nothing}"
+else
+  status=$?
+  echo "failed with exit $status"
+  osascript -e "display notification \"Exit $status. See ~/Library/Logs/nightcap.log\" with title \"nightcap: Homebrew update failed\""
+  exit $status
+fi
