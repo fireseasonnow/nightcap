@@ -1,4 +1,4 @@
-# nightcap
+<img src=".github/social.png" alt="nightcap: a quiet daily brew for your Mac. Keeps Homebrew up to date in the background." width="100%">
 
 A quiet daily brew for your Mac: keeps Homebrew up to date in the background on macOS. Once a day it runs:
 
