@@ -13,7 +13,7 @@ If you want more options (pick which packages to upgrade, `sudo` prompts for cas
 ## What it does
 
 - Runs daily, weekly, every 2 weeks or monthly. Checks hourly and at login whether a run is due, so a missed run catches up without running more often than you asked.
-- **Waits for AC power**, so the catch-up after you open the lid won't drain the battery. A due run starts within the hour after you plug in.
+- **Runs on battery too**, so updates don't wait for you to plug in.
 - **Notifies you only when something fails**, and tries again the next day. Successful runs stay quiet.
 - Logs to `~/Library/Logs/nightcap.log`, trimmed to the last 2000 lines. Each run ends with a summary line such as `ok, upgraded: git node ripgrep`, so you can see what changed and when.
 - Runs as a low-priority background job.
@@ -27,7 +27,7 @@ cd nightcap
 ./install.sh
 ```
 
-This copies the script to `~/.local/bin/nightcap` and loads `~/Library/LaunchAgents/io.github.fireseasonnow.nightcap.plist`. The first run starts right away if the Mac is on AC power. Running `install.sh` again is safe; it replaces the script and reloads the agent.
+This copies the script to `~/.local/bin/nightcap` and loads `~/Library/LaunchAgents/io.github.fireseasonnow.nightcap.plist`. The first run starts right away. Running `install.sh` again is safe; it replaces the script and reloads the agent.
 
 ## Schedule
 
@@ -72,7 +72,7 @@ rm ~/.local/bin/nightcap ~/.local/state/nightcap-next-run ~/Library/Logs/nightca
 - **Sleep and shutdown:** launchd doesn't wake the Mac. If a run comes due while it's asleep or off, it runs once within about an hour of waking, or at login. So a fixed time like `03:00` only actually runs at 3am on a Mac that stays awake overnight; on a laptop that sleeps, it runs after you open the lid.
 - **To hold a package back** (a database, a specific language version), run `brew pin <name>`. Pinned packages are skipped by `brew upgrade`, so this script leaves them alone too. `brew unpin <name>` releases it.
 - **Casks that need `sudo`** can't upgrade in the background. Those runs fail with a notification each day; run `brew upgrade` in a terminal to finish them.
-- **To run it now**, call `~/.local/bin/nightcap` with no arguments. That ignores the schedule and the battery check, and doesn't move the next scheduled run.
+- **To run it now**, call `~/.local/bin/nightcap` with no arguments. That ignores the schedule and doesn't move the next scheduled run.
 - **`brew cleanup` also autoremoves formulae that nothing depends on anymore**, for example a Python version that was only installed as a dependency. To prevent that, add `export HOMEBREW_NO_AUTOREMOVE=1` near the top of the script.
 - **Change the schedule** by running `install.sh` again with the new options. That also starts a run right away.
 

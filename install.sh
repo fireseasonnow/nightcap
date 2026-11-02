@@ -83,4 +83,4 @@ EOF
 launchctl bootout "$domain/$label" 2>/dev/null || true
 launchctl bootstrap "$domain" "$plist"
 
-echo "Installed, running $when. First run starts now if on AC power; log: ~/Library/Logs/nightcap.log"
+echo "Installed, running $when. First run starts now; log: ~/Library/Logs/nightcap.log"
