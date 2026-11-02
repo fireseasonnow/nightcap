@@ -1,7 +1,9 @@
 #!/bin/bash
-# Daily Homebrew update + upgrade + cleanup.
-# Run by the launchd agent that install.sh sets up; skips on battery,
-# notifies only on failure. Log: ~/Library/Logs/nightcap.log
+# Homebrew update + upgrade + cleanup, on the schedule install.sh sets up.
+# launchd calls this hourly, passing date(1) adjustments that give the next
+# run time; it exits unless a run is due and the Mac is on AC power. With no
+# arguments it runs right away and leaves the schedule alone.
+# Notifies only on failure. Log: ~/Library/Logs/nightcap.log
 
 # Apple Silicon installs live in /opt/homebrew, Intel ones in /usr/local
 if [ -x /opt/homebrew/bin/brew ]; then
@@ -14,6 +16,15 @@ export HOMEBREW_NO_ENV_HINTS=1
 # brew update runs explicitly below; don't let other commands re-run it
 export HOMEBREW_NO_AUTO_UPDATE=1
 
+next_run=~/.local/state/nightcap-next-run
+if [ $# -gt 0 ]; then
+  # these exits happen hourly, so they stay out of the log
+  [ "$(date +%s)" -lt "$(cat "$next_run" 2>/dev/null || echo 0)" ] && exit 0
+  pmset -g batt | grep -q "'AC Power'" || exit 0
+  # worked out before brew runs, so its duration doesn't push the schedule back
+  next=$(date "$@" +%s)
+fi
+
 log=~/Library/Logs/nightcap.log
 # keep the log from growing forever
 [ -f "$log" ] && tail -n 2000 "$log" > "$log.tmp" && mv "$log.tmp" "$log"
@@ -21,18 +32,16 @@ exec >>"$log" 2>&1
 
 echo "=== $(date)"
 
-if ! pmset -g batt | grep -q "'AC Power'"; then
-  echo "on battery, skipping"
-  exit 0
-fi
-
 if brew update && before=$(brew outdated --quiet) && brew upgrade && brew cleanup; then
   # whatever was outdated before and isn't now got upgraded (pinned ones stay outdated)
   upgraded=$(comm -23 <(sort <<<"$before") <(brew outdated --quiet | sort) | xargs)
   echo "ok, upgraded: ${upgraded:-nothing}"
+  [ $# -eq 0 ] || echo "$next" > "$next_run"
 else
   status=$?
   echo "failed with exit $status"
   osascript -e "display notification \"Exit $status. See ~/Library/Logs/nightcap.log\" with title \"nightcap: Homebrew update failed\""
+  # retry tomorrow, not a whole week or month from now
+  [ $# -eq 0 ] || date -v+1d +%s > "$next_run"
   exit $status
 fi

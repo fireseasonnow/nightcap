@@ -7,6 +7,7 @@ label=io.github.fireseasonnow.nightcap
 launchctl bootout "gui/$(id -u)/$label" 2>/dev/null
 rm -f "$HOME/Library/LaunchAgents/$label.plist" \
       "$HOME/.local/bin/nightcap" \
+      "$HOME/.local/state/nightcap-next-run" \
       "$HOME/Library/Logs/nightcap.log"
 
 echo "Uninstalled."
