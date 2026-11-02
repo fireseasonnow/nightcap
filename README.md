@@ -1,6 +1,6 @@
-<img src=".github/social.png" alt="nightcap: a quiet daily brew for your Mac. Keeps Homebrew up to date in the background." width="100%">
+<img src=".github/social.png" alt="nightcap: a quiet brew for your Mac. Keeps Homebrew up to date in the background." width="100%">
 
-A quiet daily brew for your Mac: keeps Homebrew up to date in the background on macOS. Once a day (or weekly, every 2 weeks or monthly, if you prefer) it runs:
+A quiet brew for your Mac: keeps Homebrew up to date in the background on macOS. Daily by default, or weekly, every 2 weeks or monthly if you prefer, it runs:
 
 ```
 brew update && brew upgrade && brew cleanup
